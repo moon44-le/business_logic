@@ -1,0 +1,22 @@
+{
+  "name": "dummy/dummy",
+  "description": "description",
+  "minimum-stability": "stable",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Kai Voigt",
+      "email": "moon44@leforce.de"
+    }
+  ],
+  "require": {
+    "league/csv": "^9.6",
+    "league/flysystem": "^1.1",
+    "ext-pdo": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Classes\\": "classes"
+    }
+  }
+}
