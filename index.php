@@ -18,15 +18,51 @@ $GLOBALS[timestamp] = date("Y-m-d H:i:s");
 $GLOBALS[email]     = "hosting@tisch.de";
 $GLOBALS[logs][] = new Log('info', 'system', 'process', 'getAdvertisersData', 'exec', $GLOBALS[timestamp] );
 
-// --------------
-// get AdvertiserData
-// --------------
+switch($_GET['type']){
+    case 'advertisers':
+        $query = 'SELECT 
+            advertiser.title AS title
+            , MAX(advertiser.isActive) AS isActive
+            , COUNT(product.sku) AS sumProducts
+            , SUM(product.active) AS activeProducts 
+            FROM advertisers AS advertiser
+            INNER join products AS product
+            ON advertiser.id = product.advertiserId
+            GROUP BY advertiser.id 
+            LIMIT 0,30';
+        $handle = (new DB)->prepare($query);
+        try     { $handle->execute(); }
+        catch   (Exception $e) { die(mail ($GLOBALS[email], "Database Error", $e->getMessage())); }
+        break;
+    case 'products':
+        $query = 'SELECT 
+            product.title AS title 
+            , advertiser.title as advertisertitle
+            FROM products AS product
+            INNER JOIN advertisers AS advertiser
+            ON product.advertiserId = advertiser.id
+            ORDER BY product.title
+            LIMIT 0,30';
+        $handle = (new DB)->prepare($query);
+        try     { $handle->execute(); }
+        catch   (Exception $e) { die(mail   ($GLOBALS[email], "Database Error", $e->getMessage())); }
+        break;
+    case 'products_sum':
+        $query = 'select 
+            count(product.sku) as sumProducts
+            from products as product';
 
-$handle = (new DB)->prepare('select * from advertisers');
-try     { $handle->execute(); }
-catch   (Exception $e) { die(mail ($GLOBALS[email], "Database Error", $e->getMessage())); }
+        $handle = (new DB)->prepare($query);
+        try     { $handle->execute(); }
+        catch   (Exception $e) { die(mail   ($GLOBALS[email], "Database Error", $e->getMessage())); }
+        break;    
+    default: return false;
+}
+$result = $handle->fetchAll(PDO::FETCH_ASSOC);
 
-$confAdvertisers = $handle->fetchAll(PDO::FETCH_OBJ);
+$json = json_encode($result);
+die($json);
+
 $advertisers = [];
 foreach($confAdvertisers as $confAdvertiser){
     $advertisers[] = new Advertiser($confAdvertiser);
