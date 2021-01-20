@@ -21,7 +21,9 @@ $GLOBALS[logs][] = new Log('info', 'system', 'process', 'getAdvertisersData', 'e
 switch($_GET['type']){
     case 'advertisers':
         $query = 'SELECT 
-            advertiser.title AS title
+            MAX(advertiser.id) as id
+            , MAX(advertiser.id) as link
+            , advertiser.title AS title
             , MAX(advertiser.isActive) AS isActive
             , COUNT(product.sku) AS sumProducts
             , SUM(product.active) AS activeProducts 
@@ -36,27 +38,52 @@ switch($_GET['type']){
         break;
     case 'products':
         $query = 'SELECT 
-            product.title AS title 
+            product.id AS id
+            , product.title AS title 
             , advertiser.title as advertisertitle
+            , product.id AS link
+
             FROM products AS product
             INNER JOIN advertisers AS advertiser
             ON product.advertiserId = advertiser.id
             ORDER BY product.title
-            LIMIT 0,30';
+            ';
         $handle = (new DB)->prepare($query);
         try     { $handle->execute(); }
         catch   (Exception $e) { die(mail   ($GLOBALS[email], "Database Error", $e->getMessage())); }
         break;
-    case 'products_sum':
-        $query = 'select 
-            count(product.sku) as sumProducts
-            from products as product';
-
+    case 'timeline':
+        $query = 'SELECT 
+            
+            , level as level 
+            , type as type
+            , target as target
+            , value as value 
+            , description as description
+            , timestamp as timestamp
+            FROM importlogs
+            ORDER BY timestamp desc
+            ';
         $handle = (new DB)->prepare($query);
         try     { $handle->execute(); }
         catch   (Exception $e) { die(mail   ($GLOBALS[email], "Database Error", $e->getMessage())); }
-        break;    
+        break;
+    case 'product':
+        $query = 'SELECT 
+            product.id AS id
+            , product.title AS title 
+            , advertiser.title as advertisertitle
+            , product.id AS link
+            FROM products AS product
+            INNER JOIN advertisers AS advertiser
+            ON product.advertiserId = advertiser.id 
+            where product.id = "A1--logo-collection"';
+        $handle = (new DB)->prepare($query);
+        try     { $handle->execute(); }
+        catch   (Exception $e) { die(mail   ($GLOBALS[email], "Database Error", $e->getMessage())); }
+        break;
     default: return false;
+
 }
 $result = $handle->fetchAll(PDO::FETCH_ASSOC);
 
